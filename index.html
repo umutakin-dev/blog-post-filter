@@ -22,6 +22,16 @@
         </label>
         <div class="post-container"></div>
         <button class="btn btn--view">View More Posts</button>
+        <input type="range" max="360" min="1" />
+        <script>
+          document
+            .querySelector('[type="range"')
+            .addEventListener("input", (e) => {
+              document
+                .querySelector(":root")
+                .style.setProperty("--hue", `${e.target.value}`);
+            });
+        </script>
       </div>
     </main>
     <script>
