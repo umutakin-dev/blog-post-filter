@@ -1,7 +1,10 @@
 // query selectors
 let posts = [];
-const maxDisplayLImit = 3;
+let filteredPosts = [];
+const POSTS_TO_SHOW = 6;
+let maxDisplayLimit = POSTS_TO_SHOW;
 const postContainer = document.querySelector(".post-container");
+const search = document.querySelector('[type="search"]');
 
 // create the cards and update the ui
 function generatePost(post) {
@@ -37,28 +40,53 @@ function generatePost(post) {
       <a href="${post.meta.url}">${post.title}</a>
     </h3>
     <div class="post__author">
-      <div class="post__author--avatar" width="55"></div>
+      <img class="post__author--avatar" width="55" src="${
+        post.meta.author.avatar
+      }" alt="${post.user.name[0].firstName} ${post.user.name[1].lastName}">
       <div>
-        <p class="post__author--name"></p>
+        <p class="post__author--name">${post.user.name[0].firstName} ${
+    post.user.name[1].lastName
+  }</p>
         <p class="post__author--role">
-          <small></small>
+          <small>${post.user.jobTitle}</small>
         </p>
       </div>
     </div>
     <div class="post__body">
+        ${post.summary}
     </div>
-    <a href="#" class="btn"></a>
+    <a href="${post.meta.url}" class="btn">Read Post</a>
   `;
   return article;
 }
 
 function loadPosts() {
   const frag = document.createDocumentFragment();
-  posts
-    .slice(0, maxDisplayLImit)
+  filteredPosts
+    .slice(0, maxDisplayLimit)
     .map((post) => frag.appendChild(generatePost(post)));
   postContainer.innerHTML = "";
   postContainer.appendChild(frag);
+}
+
+function filterPosts() {
+  console.log("Search:", search.value);
+
+  const searchFilter = (post) =>
+    [
+      post.title,
+      post.summary,
+      post.user.name[0].firstName,
+      post.user.name[1].lastName,
+      post.meta.tags.map((t) => t).join(""),
+    ]
+      .join("")
+      .toLowerCase()
+      .indexOf(search.value.toLowerCase()) !== -1;
+  console.log("Posts:", posts);
+  filteredPosts = posts.filter(searchFilter);
+  console.log("Filtered Posts:", filteredPosts);
+  loadPosts();
 }
 
 // fetch the data
@@ -71,8 +99,10 @@ async function fetchPosts() {
       return response.json();
     })
     .then((data) => {
-      posts = data;
-      loadPosts();
+      posts = data.sort(
+        (a, b) => new Date(b.meta.date) - new Date(a.meta.date)
+      );
+      filterPosts();
     })
     .catch((error) => {
       console.error(
@@ -84,5 +114,11 @@ async function fetchPosts() {
 fetchPosts();
 
 // update number of posts with button click
+function viewMorePosts() {
+  maxDisplayLimit += POSTS_TO_SHOW;
+  loadPosts();
+}
+document.querySelector(".btn--view").addEventListener("click", viewMorePosts);
 
 // filter for search
+search.addEventListener("keyup", filterPosts);
